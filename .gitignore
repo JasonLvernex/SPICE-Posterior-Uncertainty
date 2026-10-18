@@ -6,8 +6,20 @@ outputs/
 save_iter*/
 saved_iters*/
 
-# Review notebook data — too large for version control
-review_vulcan_mc_*/data/
+# Local review packages
+review_vulcan_mc_notebook/
+review_vulcan_mc_send/
+review_vulcan_mc_*.zip
+
+# Local basis builds and logs
+basis_shifted/
+basis_shifted.pre*/
+basis_shifted*.zip
+logs/
+*.ps1
+
+# Experiments and diagnostics not used in the paper
+test_not_in_paper/
 
 # Notebooks (keep locally, do not publish)
 notebooks/
