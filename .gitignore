@@ -17,6 +17,7 @@ basis_shifted.pre*/
 basis_shifted*.zip
 logs/
 *.ps1
+/AGENTS.md
 
 # Experiments and diagnostics not used in the paper
 test_not_in_paper/

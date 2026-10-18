@@ -9,7 +9,7 @@ A pipeline for *in vivo* brain 2D-MRSI reconstruction, spectral fitting, and met
 
 This codebase implements a full processing pipeline from raw k-space MRSI data to quantified metabolite maps with analytical uncertainty estimates.
 
-![Pipeline overview](pipeline_overview.png)
+![VULCAN uncertainty pipeline](viz/output/1-uncert_pipeline.png)
 
 ### MRSI Reconstruction
 
