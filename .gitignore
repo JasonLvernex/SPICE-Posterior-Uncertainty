@@ -50,8 +50,11 @@ build/
 *.swo
 *~
 
-# Visualization folder (scripts + outputs, kept local only)
-viz/
+# Visualization folder (keep only the README overview in version control)
+viz/*
+!viz/output/
+viz/output/*
+!viz/output/1-uncert_pipeline.png
 
 # Scratch / one-off sweep scripts (kept local only)
 tmp/
