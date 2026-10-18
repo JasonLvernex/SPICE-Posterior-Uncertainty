@@ -22,18 +22,20 @@ data/
         │                        #   used as brain mask reference in steps 01–08  [symlink for _02…_NN]
         ├── sigma_noise.npy      # scalar float32  noise σ                   [symlink for _02…_NN]
         ├── wref_o_check.png     # Quick-check magnitude/phase plot of wref_o [symlink for _02…_NN]
+        ├── affine.npy           # (4, 4) MRSI affine                         [symlink for _02…_NN]
+        ├── wref_affine.npy      # (4, 4) water-reference affine              [_01 only]
         ├── scan_params.json     # Scan parameters auto-loaded by pipeline scripts
-        └── ecalib.npy           # (Ny, Nx, N_coils)  optional; only needed for --method rni in step 01
+        └── ecalib.npy           # (Ny, Nx, N_coils) optional input for data_proc_02 --method rni
 ```
 
-> `wref_data`, `wref_ksp`, `wref_o`, `sigma_noise`, and `wref_o_check.png` are written once to `_01` and symlinked from `_02` … `_NN` since all scans in a session share the same water reference.
+> `wref_data`, `wref_ksp`, `wref_o`, `sigma_noise`, `wref_o_check.png`, and `affine.npy` are written once to `_01` and symlinked from `_02` … `_NN` since all scans in a session share the same water reference.
 
 ## Generating processed files from raw twix
 
-Run `scripts/data_proc_01_twix2npy.py` to convert `.dat` → `.npy`:
+Run `scripts/data_preproc/data_proc_01_twix2npy.py` to convert `.dat` → `.npy`:
 
 ```bash
-python scripts/data_proc_01_twix2npy.py \
+python scripts/data_preproc/data_proc_01_twix2npy.py \
     --raw-dir data/raw/invivo_260623 \
     --out-prefix data/processed/invivo_260623 \
     --mrsi-dat meas_MID00066_FID92027_MRSI_64_cr_1.dat \
@@ -52,7 +54,7 @@ This creates `data/processed/invivo_260623_01/`, `_02/`, `_03/` with wref files 
 Pass a processed subject directory to each pipeline script:
 
 ```bash
-python scripts/01_coil_correction.py \
+python scripts/data_preproc/data_proc_02_coil_correction.py \
     --data-dir data/processed/invivo_260623_01 \
-    --basis-dir basis/ --save-plots
+    --save-plots
 ```
