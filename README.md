@@ -1,6 +1,6 @@
 # SPICE-MARGARITA
 
-[![License](https://img.shields.io/badge/License-Oxford%20Non--Commercial-blue.svg)](LICENSE)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 [![Python](https://img.shields.io/badge/python-%E2%89%A53.12-blue.svg)](https://www.python.org/downloads/)
 
 ## Citation
@@ -122,3 +122,7 @@ pip install git+https://github.com/JasonLvernex/SPICE-Posterior-Uncertainty.git
 - [FSLeyes](https://open.win.ox.ac.uk/pages/fsl/fsleyes/fsleyes/) ≥ 1.19.0 (conda install) + [fsleyes-plugin-mrs](https://git.fmrib.ox.ac.uk/wclarke/fsleyes-plugin-mrs) ≥ 0.1.10
 - [NIfTI-MRS](https://github.com/wtclarke/nifti_mrs) ≥ 1.4.1
 - networkx, psutil, tqdm, nibabel
+
+## License
+
+This project is licensed under the [MIT License](LICENSE).

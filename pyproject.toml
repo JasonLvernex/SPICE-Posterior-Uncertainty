@@ -6,7 +6,11 @@ build-backend = "setuptools.build_meta"
 name = "spice-margarita"
 version = "0.1.0"
 description = "SPICE-MARGARITA: 2D MRSI reconstruction and metabolite uncertainty quantification"
+license = {file = "LICENSE"}
 requires-python = ">=3.12"
+classifiers = [
+    "License :: OSI Approved :: MIT License",
+]
 dependencies = [
     "numpy>=2.4.2",
     "scipy>=1.17.1",
