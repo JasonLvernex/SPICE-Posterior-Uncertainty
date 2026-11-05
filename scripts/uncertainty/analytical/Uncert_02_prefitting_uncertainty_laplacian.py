@@ -46,6 +46,7 @@ Usage:
 
 import argparse
 import os
+import re
 import sys
 from pathlib import Path
 from warnings import filterwarnings
@@ -63,6 +64,7 @@ from tqdm import tqdm
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))))
 from utils.scan_params import load_scan_params
+from utils.display import orient_map_for_display, orient_point_for_display
 
 D_TYPE = np.complex64
 
@@ -140,11 +142,11 @@ def build_dataset_auto(mHm_dir, num_voxels, V, mu_map,
     print(f"[uncert-post] Found {len(files)} mHm files in {mHm_dir}")
 
     for f in tqdm(files, desc="Sampling voxels"):
-        try:
-            vox_idx = int(f.stem.split("_")[1])
-        except Exception:
+        match = re.fullmatch(r"mHm_(?:from_HinvM_vox)?(\d+)", f.stem)
+        if match is None:
             print(f"[WARN] skipping bad filename: {f.name}")
             continue
+        vox_idx = int(match.group(1))
         if vox_idx < 0 or vox_idx >= num_voxels:
             continue
 
@@ -186,6 +188,9 @@ def plot_average_variation(
     std_map  = np.mean(np.abs(std_img),   axis=-1)       # (nx, ny)
     mean_map = np.where(mask_2d, mean_map, np.nan)
     std_map  = np.where(mask_2d, std_map,  np.nan)
+    display_x, display_y = orient_point_for_display(
+        voxel_x, voxel_y, mean_map.shape
+    )
 
     c = "white" if dark_mode else "black"
     bg = "black" if dark_mode else "white"
@@ -208,34 +213,39 @@ def plot_average_variation(
             wref_brain = np.where(mask_2d, wref_norm, np.nan)
             wref_cmap  = copy.copy(plt.cm.get_cmap("gray"))
             wref_cmap.set_bad(color=bg)
-            ax.imshow(wref_brain, origin="lower", cmap=wref_cmap, alpha=0.5, zorder=0)
+            ax.imshow(orient_map_for_display(wref_brain), origin="lower",
+                      cmap=wref_cmap, alpha=0.5, zorder=0)
 
     # Panel 1 — mean spectral magnitude
     cmap_g = copy.copy(plt.cm.get_cmap("viridis"))
     cmap_g.set_bad(color=bg)
     _wref_overlay(axs[0])
-    im0 = axs[0].imshow(mean_map, origin="lower", cmap=cmap_g, zorder=1)
+    im0 = axs[0].imshow(orient_map_for_display(mean_map),
+                        origin="lower", cmap=cmap_g, zorder=1)
     axs[0].set_title("Mean spectral magnitude")
     cbar0 = plt.colorbar(im0, ax=axs[0], fraction=0.046)
     cbar0.ax.yaxis.set_tick_params(color=c)
     plt.setp(cbar0.ax.get_yticklabels(), color=c)
-    axs[0].plot(voxel_x, voxel_y, "g+", markersize=10, markeredgewidth=2, zorder=3)
+    axs[0].plot(display_x, display_y, "g+", markersize=10,
+                markeredgewidth=2, zorder=3)
 
     # Panel 2 — posterior std map
     vmax = threshold if threshold is not None else (
         float(np.nanpercentile(std_map[mask_2d], 95)) if mask_2d.any() else None
     )
-    cmap_r = copy.copy(plt.cm.get_cmap("Reds"))
+    cmap_r = copy.copy(plt.cm.get_cmap("Reds_r"))
     cmap_r.set_bad(color=bg)
     _wref_overlay(axs[1])
-    im1 = axs[1].imshow(std_map, origin="lower", vmin=0, vmax=vmax,
+    im1 = axs[1].imshow(orient_map_for_display(std_map),
+                          origin="lower", vmin=0, vmax=vmax,
                           cmap=cmap_r, alpha=0.9, zorder=1)
     axs[1].set_title("Posterior std (mean over spectrum)")
     cbar1 = plt.colorbar(im1, ax=axs[1], fraction=0.046)
     cbar1.ax.yaxis.set_tick_params(color=c)
     cbar1.ax.yaxis.set_major_formatter(mticker.FuncFormatter(lambda x, _: f"{x:.2e}"))
     plt.setp(cbar1.ax.get_yticklabels(), color=c)
-    axs[1].plot(voxel_x, voxel_y, "g+", markersize=10, markeredgewidth=2, zorder=3)
+    axs[1].plot(display_x, display_y, "g+", markersize=10,
+                markeredgewidth=2, zorder=3)
 
     # Panel 3 — mean ± std spectrum at selected voxel
     mu  = np.abs(mean_spec[voxel_y, voxel_x, :])

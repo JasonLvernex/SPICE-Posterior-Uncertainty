@@ -57,6 +57,7 @@ _root = os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(os.path.
 sys.path.insert(0, _root)
 from utils.pipeline_utils import make_brain_mask
 from utils.scan_params import load_scan_params
+from utils.display import orient_map_for_display
 
 
 # ── helpers ───────────────────────────────────────────────────────────────────
@@ -71,7 +72,7 @@ def _dark_ax(ax, bg="black", fg="white"):
         sp.set_color(fg)
 
 
-def _masked_imshow(ax, data_2d, brain_mask, cmap="Reds", vmin=None, vmax=None,
+def _masked_imshow(ax, data_2d, brain_mask, cmap="Reds_r", vmin=None, vmax=None,
                    wref_norm=None, origin="lower"):
     masked = np.where(brain_mask, data_2d, np.nan)
     cmap_obj = copy.copy(plt.cm.get_cmap(cmap))
@@ -80,10 +81,12 @@ def _masked_imshow(ax, data_2d, brain_mask, cmap="Reds", vmin=None, vmax=None,
         wref_brain = np.where(brain_mask, wref_norm, np.nan)
         wref_cmap = copy.copy(plt.cm.get_cmap("gray"))
         wref_cmap.set_bad(color="black", alpha=1.0)
-        ax.imshow(wref_brain, origin=origin, cmap=wref_cmap, alpha=0.5, zorder=0)
-    im = ax.imshow(masked, origin=origin, cmap=cmap_obj,
+        ax.imshow(orient_map_for_display(wref_brain), origin=origin,
+                  cmap=wref_cmap, alpha=0.5, zorder=0)
+    im = ax.imshow(orient_map_for_display(masked), origin=origin, cmap=cmap_obj,
                    vmin=vmin, vmax=vmax, alpha=0.9, zorder=1)
-    ax.contour(brain_mask, levels=[0.5], colors="white", linewidths=0.5, zorder=2)
+    ax.contour(orient_map_for_display(brain_mask), levels=[0.5],
+               colors="white", linewidths=0.5, zorder=2)
     return im
 
 
@@ -111,9 +114,12 @@ def plot_ratio_map(ratio_map, brain_mask, wref_norm, out_path,
         wref_brain = np.where(brain_mask, wref_norm, np.nan)
         wref_cmap = plt.cm.get_cmap("gray").copy()
         wref_cmap.set_bad(color="black", alpha=1.0)
-        ax.imshow(wref_brain, origin="lower", cmap=wref_cmap, alpha=0.5, zorder=0)
-    im = ax.imshow(display, origin="lower", cmap=cmap_obj, norm=norm, alpha=0.9, zorder=1)
-    ax.contour(brain_mask, levels=[0.5], colors="white", linewidths=0.5, zorder=2)
+        ax.imshow(orient_map_for_display(wref_brain), origin="lower",
+                  cmap=wref_cmap, alpha=0.5, zorder=0)
+    im = ax.imshow(orient_map_for_display(display), origin="lower",
+                   cmap=cmap_obj, norm=norm, alpha=0.9, zorder=1)
+    ax.contour(orient_map_for_display(brain_mask), levels=[0.5],
+               colors="white", linewidths=0.5, zorder=2)
 
     cbar = plt.colorbar(im, ax=ax)
     cbar.set_label("ratio  (clipped)", color="white")

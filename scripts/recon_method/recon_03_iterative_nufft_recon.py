@@ -7,8 +7,8 @@ Result x is in FID domain, saved as NIfTI-MRS for downstream use
 (xcorr alignment + spectral fitting in step 05).
 
 Backends:
-  torchnufft (default) : torchkbnufft + Toeplitz Gram  — fast per CG iter
-  finufft            : mrinufft finufft, Gram = F.H@F — no torch dep, slower
+  finufft (default) : mrinufft finufft, Gram = F.H@F — no torch dep, slower
+  torchnufft         : torchkbnufft + Toeplitz Gram  — fast per CG iter
 
 Reads  : <out_dir>/lipid_removal/kt_mrsi_lprm.npy
          <out_dir>/lipid_removal/mrsi_ksp_scaled.npy
@@ -62,7 +62,7 @@ def parse_args():
     p.add_argument("--data-dir",        required=True)
     p.add_argument("--out-dir",         default=None,
                    help="Output directory (default: ./output/<subject_id> derived from --data-dir)")
-    p.add_argument("--backend",         default="torchnufft",
+    p.add_argument("--backend",         default="finufft",
                    choices=["torchnufft", "finufft"])
     p.add_argument("--dwelltime",       type=float, default=None)
     p.add_argument("--k-points",        type=int, default=None)

@@ -72,6 +72,7 @@ _root = Path(os.path.dirname(os.path.dirname(os.path.dirname(
     os.path.dirname(os.path.abspath(__file__))))))
 sys.path.insert(0, str(_root))
 from utils.scan_params import load_scan_params
+from utils.display import orient_map_for_display, orient_point_for_display
 
 D_TYPE = np.complex64
 
@@ -134,9 +135,12 @@ def _overlay_map(data_2d, wref_norm, brain_mask, title, cmap, label, out_path, v
     masked = np.where(brain_mask, data_2d, np.nan)
     fig, ax = plt.subplots(figsize=(6, 5), facecolor="black")
     ax.set_facecolor("black")
-    ax.imshow(wref_norm, origin="lower", cmap="gray", alpha=0.6, zorder=0)
-    im = ax.imshow(masked, origin="lower", vmin=0, vmax=vmax, cmap=cmap, alpha=0.9, zorder=1)
-    ax.contour(brain_mask, levels=[0.5], colors="white", linewidths=0.7, zorder=2)
+    ax.imshow(orient_map_for_display(wref_norm), origin="lower",
+              cmap="gray", alpha=0.6, zorder=0)
+    im = ax.imshow(orient_map_for_display(masked), origin="lower",
+                   vmin=0, vmax=vmax, cmap=cmap, alpha=0.9, zorder=1)
+    ax.contour(orient_map_for_display(brain_mask), levels=[0.5],
+               colors="white", linewidths=0.7, zorder=2)
     ax.set_title(title, color="white")
     ax.tick_params(colors="white")
     for spine in ax.spines.values():
@@ -171,27 +175,34 @@ def _plot_prefitting(mean_map, std_map, spec_mean_vox, spec_std_vox,
         wm   = np.where(brain_mask, wref_norm, np.nan)
         cm_g = copy.copy(plt.cm.get_cmap("gray"))
         cm_g.set_bad(color=bg)
-        ax.imshow(wm, origin="lower", cmap=cm_g, alpha=0.5, zorder=0)
+        ax.imshow(orient_map_for_display(wm), origin="lower",
+                  cmap=cm_g, alpha=0.5, zorder=0)
 
     # Panel 1 — mean |spectrum| map
     cm_v = copy.copy(plt.cm.get_cmap("viridis"))
     cm_v.set_bad(color=bg)
     _wref_bg(axs[0])
-    im0 = axs[0].imshow(np.where(brain_mask, mean_map, np.nan),
+    display_x, display_y = orient_point_for_display(
+        vy, vx, mean_map.shape
+    )
+    im0 = axs[0].imshow(orient_map_for_display(
+                            np.where(brain_mask, mean_map, np.nan)),
                          origin="lower", cmap=cm_v, zorder=1)
     axs[0].set_title("Mean |spectrum|")
     cbar0 = plt.colorbar(im0, ax=axs[0], fraction=0.046)
     cbar0.ax.yaxis.set_tick_params(color=c)
     plt.setp(cbar0.ax.get_yticklabels(), color=c)
-    axs[0].plot(vy, vx, "g+", markersize=10, markeredgewidth=2, zorder=3)
+    axs[0].plot(display_x, display_y, "g+", markersize=10,
+                markeredgewidth=2, zorder=3)
 
     # Panel 2 — prefitting std map
     if vmax_std is None:
         vmax_std = float(np.nanpercentile(std_map[brain_mask], 95))
-    cm_r = copy.copy(plt.cm.get_cmap("Reds"))
+    cm_r = copy.copy(plt.cm.get_cmap("Reds_r"))
     cm_r.set_bad(color=bg)
     _wref_bg(axs[1])
-    im1 = axs[1].imshow(np.where(brain_mask, std_map, np.nan),
+    im1 = axs[1].imshow(orient_map_for_display(
+                            np.where(brain_mask, std_map, np.nan)),
                          origin="lower", vmin=0, vmax=vmax_std,
                          cmap=cm_r, alpha=0.9, zorder=1)
     axs[1].set_title(f"Prefitting std  (N_mc={N_mc})")
@@ -199,7 +210,8 @@ def _plot_prefitting(mean_map, std_map, spec_mean_vox, spec_std_vox,
     cbar1.ax.yaxis.set_tick_params(color=c)
     cbar1.ax.yaxis.set_major_formatter(mticker.FuncFormatter(lambda x, _: f"{x:.2e}"))
     plt.setp(cbar1.ax.get_yticklabels(), color=c)
-    axs[1].plot(vy, vx, "g+", markersize=10, markeredgewidth=2, zorder=3)
+    axs[1].plot(display_x, display_y, "g+", markersize=10,
+                markeredgewidth=2, zorder=3)
 
     # Panel 3 — mean ± std spectrum at selected voxel
     mu  = np.abs(spec_mean_vox)
@@ -387,8 +399,10 @@ def main():
 
     # Debug: visualise mask before fitting
     fig, axs = plt.subplots(1, 2, figsize=(10, 5))
-    axs[0].imshow(wref_2d,    origin="lower", cmap="gray");  axs[0].set_title("wref_2d (raw)")
-    axs[1].imshow(brain_mask, origin="lower", cmap="gray");  axs[1].set_title("brain_mask")
+    axs[0].imshow(orient_map_for_display(wref_2d),
+                  origin="lower", cmap="gray");  axs[0].set_title("wref_2d (raw)")
+    axs[1].imshow(orient_map_for_display(brain_mask),
+                  origin="lower", cmap="gray");  axs[1].set_title("brain_mask")
     plt.tight_layout()
     fig.savefig(str(out_dir / "debug_brain_mask.png"), dpi=150)
     plt.close(fig)
@@ -469,7 +483,7 @@ def main():
         vmax_s  = float(np.nanpercentile(std_sl[brain_mask],  90)) if brain_mask.any() else None
         vmax_m  = float(np.nanpercentile(mean_sl[brain_mask], 90)) if brain_mask.any() else None
         _overlay_map(std_sl,  wref_norm, brain_mask, f"Conc std: {meta}",
-                     "Reds",   "Std (arb.)",           str(out_dir / f"fig_conc_std_{meta}.png"),  vmax=vmax_s)
+                     "Reds_r", "Std (arb.)",           str(out_dir / f"fig_conc_std_{meta}.png"),  vmax=vmax_s)
         _overlay_map(mean_sl, wref_norm, brain_mask, f"Conc mean: {meta}",
                      "inferno", "Mean (arb.)",          str(out_dir / f"fig_conc_mean_{meta}.png"), vmax=vmax_m)
         print(f"[uncert-08] Saved fig_conc_std_{meta}.png / fig_conc_mean_{meta}.png")

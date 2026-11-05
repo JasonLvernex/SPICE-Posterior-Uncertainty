@@ -16,8 +16,9 @@ Usage:
         --basis-dir ./basis/ \
         --dim 64 64 --n-seq-points 300 --k-points 39842 \
         --save-plots \
-        --phase-method max-real
-        [--brain-threshold 0.16]
+        --phase-method max-real \
+        [--brain-mask-cleanup]
+        [--brain-threshold 0.16] #0.1 for phan, 0.08 for25 0.16 for 26
 """
 
 import argparse
@@ -48,6 +49,7 @@ from fsl.data.image import Image
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
 from utils.scan_params import load_scan_params
 from utils.utils import phase_corr
+from utils.display import orient_map_for_display, orient_point_for_display
 from utils.pipeline_utils import try_symlink_shared_output, make_brain_mask, patch_spicefit_tree
 
 
@@ -112,12 +114,16 @@ def plot_mag_and_spectrum(spec_3d, PPM_AXIS, voxel_row, voxel_col, title, fname)
     spec_v  = spec_3d[voxel_row, voxel_col, :].astype(np.complex64)
 
     fig, axs = plt.subplots(1, 2, figsize=(14, 6))
-    im = axs[0].imshow(mag_map, cmap="viridis", origin="lower")
+    display_map = orient_map_for_display(mag_map)
+    display_col, display_row = orient_point_for_display(
+        voxel_col, voxel_row, mag_map.shape
+    )
+    im = axs[0].imshow(display_map, cmap="viridis", origin="lower")
     axs[0].set_title("Average spectral magnitude")
     axs[0].set_xlabel("x (cols)")
     axs[0].set_ylabel("y (rows)")
     plt.colorbar(im, ax=axs[0], fraction=0.046, pad=0.04)
-    axs[0].add_patch(Rectangle((voxel_col - 0.5, voxel_row - 0.5), 1, 1,
+    axs[0].add_patch(Rectangle((display_col - 0.5, display_row - 0.5), 1, 1,
                                 linewidth=2, edgecolor="red", facecolor="none"))
     axs[1].plot(PPM_AXIS, np.real(spec_v), label="Real")
     axs[1].plot(PPM_AXIS, np.abs(spec_v),  label="|S|", alpha=0.7)
@@ -255,8 +261,9 @@ def main():
 
     if args.save_plots:
         fig, ax = plt.subplots(figsize=(6, 5))
-        im = ax.imshow(wref_norm, origin="lower", cmap="gray")
-        ax.imshow(brain_mask, origin="lower", cmap="Reds", alpha=0.35)
+        im = ax.imshow(orient_map_for_display(wref_norm), origin="lower", cmap="gray")
+        ax.imshow(orient_map_for_display(brain_mask), origin="lower",
+                  cmap="Reds", alpha=0.35)
         ax.set_title(f"wref_o (norm) + brain mask (thr={args.brain_threshold:.3g})")
         plt.colorbar(im, ax=ax)
         plt.tight_layout()
@@ -333,7 +340,8 @@ def main():
 
     if args.save_plots:
         fig, ax = plt.subplots(figsize=(6, 5))
-        im = ax.imshow(b0_shift_hz_img, origin="lower", cmap="gray")
+        im = ax.imshow(orient_map_for_display(b0_shift_hz_img),
+                       origin="lower", cmap="gray")
         plt.colorbar(im, ax=ax, label="B0 offset (Hz)")
         ax.set_title("B0 shift (Hz) — raw fit")
         plt.tight_layout()
@@ -348,7 +356,8 @@ def main():
         B0_fill_smoothed[~brain_mask] = np.nan
         if args.save_plots:
             fig, ax = plt.subplots(figsize=(6, 5))
-            im = ax.imshow(B0_fill_smoothed, origin="lower", cmap="gray")
+            im = ax.imshow(orient_map_for_display(B0_fill_smoothed),
+                           origin="lower", cmap="gray")
             plt.colorbar(im, ax=ax, label="B0 offset smoothed (Hz)")
             ax.set_title(f"B0 map smoothed  σ={args.smooth_sigma}")
             plt.tight_layout()
@@ -379,7 +388,7 @@ def main():
 
     if args.save_plots:
         fig, ax = plt.subplots(figsize=(6, 5))
-        im = ax.imshow(B0_final, origin="lower", cmap="gray")
+        im = ax.imshow(orient_map_for_display(B0_final), origin="lower", cmap="gray")
         plt.colorbar(im, ax=ax, label="B0 offset (Hz)")
         ax.set_title("B0 map — final")
         plt.tight_layout()

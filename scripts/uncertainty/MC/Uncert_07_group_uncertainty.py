@@ -38,6 +38,7 @@ import numpy as np
 _root = os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
 sys.path.insert(0, _root)
 from utils.scan_params import load_scan_params
+from utils.display import orient_map_for_display
 from utils.pipeline_utils import make_brain_mask
 
 
@@ -72,7 +73,7 @@ def load_conc_maps(fit_dir, use_internal):
 
 
 def _plot_map(title, data_2d, wref_norm, brain_mask, out_path,
-              vmax=None, cmap="Reds", cbar_label=""):
+              vmax=None, cmap="Reds_r", cbar_label=""):
     import copy
     masked = np.where(brain_mask, data_2d, np.nan)
     cmap_obj = copy.copy(plt.cm.get_cmap(cmap))
@@ -83,10 +84,13 @@ def _plot_map(title, data_2d, wref_norm, brain_mask, out_path,
     wref_brain = np.where(brain_mask, wref_norm, np.nan)
     wref_cmap  = copy.copy(plt.cm.get_cmap("gray"))
     wref_cmap.set_bad(color="black", alpha=1.0)
-    ax.imshow(wref_brain, origin="lower", cmap=wref_cmap, alpha=0.6, zorder=0)
-    im = ax.imshow(masked, origin="lower", vmin=0, vmax=vmax,
+    ax.imshow(orient_map_for_display(wref_brain), origin="lower",
+              cmap=wref_cmap, alpha=0.6, zorder=0)
+    im = ax.imshow(orient_map_for_display(masked),
+                   origin="lower", vmin=0, vmax=vmax,
                    cmap=cmap_obj, alpha=0.9, zorder=1)
-    ax.contour(brain_mask, levels=[0.5], colors="white", linewidths=0.7, zorder=2)
+    ax.contour(orient_map_for_display(brain_mask), levels=[0.5],
+               colors="white", linewidths=0.7, zorder=2)
     ax.set_title(title, color="white", fontsize=10)
     ax.tick_params(colors="white")
     for sp in ax.spines.values():
@@ -124,33 +128,36 @@ def _plot_prefitting_voxel_uncert(mean_map, std_map, mean_spec, std_spec,
     mean_masked = np.where(brain_mask, mean_map, np.nan)
     cmap_g = copy.copy(plt.cm.get_cmap("viridis"))
     cmap_g.set_bad(color="black")
-    im0 = axs[0].imshow(mean_masked, origin="lower", cmap=cmap_g)
+    im0 = axs[0].imshow(orient_map_for_display(mean_masked),
+                         origin="lower", cmap=cmap_g)
     axs[0].set_title("Mean spectral magnitude (avg over ppm)")
     cbar0 = plt.colorbar(im0, ax=axs[0], fraction=0.046)
     cbar0.ax.yaxis.set_tick_params(color="white")
     plt.setp(cbar0.ax.get_yticklabels(), color="white")
-    axs[0].plot(vx, vy, "g+", markersize=10, markeredgewidth=2)
+    # axs[0].plot(vx, vy, "g+", markersize=10, markeredgewidth=2)
 
     # Panel 2: std map with numerical colorbar
     std_masked = np.where(brain_mask, std_map, np.nan)
     vmax_std = threshold if threshold is not None else (
         float(np.nanpercentile(std_masked[brain_mask], 95)) if brain_mask.any() else None
     )
-    cmap_r = copy.copy(plt.cm.get_cmap("Reds"))
+    cmap_r = copy.copy(plt.cm.get_cmap("Reds_r"))
     cmap_r.set_bad(color="black")
     wref_brain = np.where(brain_mask, wref_norm, np.nan)
     wref_cmap = copy.copy(plt.cm.get_cmap("gray"))
     wref_cmap.set_bad(color="black")
-    axs[1].imshow(wref_brain, origin="lower", cmap=wref_cmap, alpha=0.5, zorder=0)
-    im1 = axs[1].imshow(std_masked, origin="lower", vmin=0, vmax=vmax_std,
+    axs[1].imshow(orient_map_for_display(wref_brain), origin="lower",
+                  cmap=wref_cmap, alpha=0.5, zorder=0)
+    im1 = axs[1].imshow(orient_map_for_display(std_masked),
+                         origin="lower", vmin=0, vmax=vmax_std,
                          cmap=cmap_r, alpha=0.9, zorder=1)
-    axs[1].contour(brain_mask, levels=[0.5], colors="white", linewidths=0.7, zorder=2)
+    # axs[1].contour(brain_mask, levels=[0.5], colors="white", linewidths=0.7, zorder=2)
     axs[1].set_title("Pre-fitting std (mean over ppm)")
     cbar1 = plt.colorbar(im1, ax=axs[1], fraction=0.046)
     cbar1.ax.yaxis.set_tick_params(color="white")
     cbar1.ax.yaxis.set_major_formatter(mticker.FuncFormatter(lambda x, _: f"{x:.2e}"))
     plt.setp(cbar1.ax.get_yticklabels(), color="white")
-    axs[1].plot(vx, vy, "g+", markersize=10, markeredgewidth=2)
+    # axs[1].plot(vx, vy, "g+", markersize=10, markeredgewidth=2)
 
     # Panel 3: spectrum ± std at selected voxel
     mu  = mean_spec[vy, vx, :]
@@ -285,7 +292,7 @@ def main():
             "Pre-fitting std (mean over ppm)",
             mean_std_map, wref_norm, brain_mask,
             os.path.join(args.out_dir, "fig_14_prefitting_std_map.png"),
-            cmap="Reds", cbar_label="Std (spectral magnitude)",
+            cmap="Reds_r", cbar_label="Std (spectral magnitude)",
         )
 
         # Per-subject spectra overlay at selected voxel
@@ -396,7 +403,7 @@ def main():
 
         _plot_map(f"Raw conc. std: {meta}", std_raw, wref_norm, brain_mask,
                   os.path.join(args.out_dir, f"fig_14_std_raw_{meta}.png"),
-                  vmax=vmax_s, cmap="Reds", cbar_label="Std (arb. units)")
+                  vmax=vmax_s, cmap="Reds_r", cbar_label="Std (arb. units)")
         _plot_map(f"Raw conc. mean: {meta}", mean_raw, wref_norm, brain_mask,
                   os.path.join(args.out_dir, f"fig_14_mean_raw_{meta}.png"),
                   vmax=vmax_m, cmap="inferno", cbar_label="Mean (arb. units)")
@@ -409,7 +416,7 @@ def main():
 
         _plot_map(f"Internal conc. std: {meta}", std_int, wref_norm, brain_mask,
                   os.path.join(args.out_dir, f"fig_14_std_internal_{meta}.png"),
-                  vmax=vmax_si, cmap="Blues", cbar_label="Std (ratio units)")
+                  vmax=vmax_si, cmap="Blues_r", cbar_label="Std (ratio units)")
         _plot_map(f"Internal conc. mean: {meta}", mean_int, wref_norm, brain_mask,
                   os.path.join(args.out_dir, f"fig_14_mean_internal_{meta}.png"),
                   vmax=vmax_mi, cmap="inferno", cbar_label="Mean (ratio units)")

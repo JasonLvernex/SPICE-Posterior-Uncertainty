@@ -17,6 +17,7 @@ from tqdm import tqdm
 
 from fsl_mrs.utils.misc import FIDToSpec, SpecToFID
 
+from .display import orient_map_for_display
 from .plotting import plot_voxel_spectrum_and_maps
 
 D_TYPE       = np.complex64
@@ -472,7 +473,7 @@ def eval_polynomial_to_highres_b0(coeffs, terms, low_shape, high_shape):
             df_high_img[ix * srf_x:(ix + 1) * srf_x, iy * srf_y:(iy + 1) * srf_y] = block
 
     plt.figure(figsize=(6, 5))
-    plt.imshow(df_high_img, cmap='jet', origin='lower')
+    plt.imshow(orient_map_for_display(df_high_img), cmap='jet', origin='lower')
     plt.colorbar(label='Δf (Hz)')
     plt.title('estimated high resolution B0 Map')
     plt.xlabel('x (voxels)')

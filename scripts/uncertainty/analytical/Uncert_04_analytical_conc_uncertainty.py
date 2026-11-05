@@ -69,6 +69,7 @@ from fsl_mrs import models as fsl_models
 _root = os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
 sys.path.insert(0, _root)
 from utils.scan_params import load_scan_params
+from utils.display import orient_map_for_display
 
 
 # ── SpecToFID (inverse of fsl_mrs FIDToSpec convention) ───────────────────────
@@ -142,11 +143,13 @@ def _plot_std_map(name, std_2d, wref_norm, brain_mask_inner, out_path,
     wref_masked = np.where(brain_mask_inner, wref_norm, np.nan)
     import copy
     _gray = copy.copy(plt.cm.get_cmap("gray"));  _gray.set_bad(color="black")
-    _reds = copy.copy(plt.cm.get_cmap("Reds"));  _reds.set_bad(color="black")
+    _reds = copy.copy(plt.cm.get_cmap("Reds_r"));  _reds.set_bad(color="black")
     fig, ax = plt.subplots(figsize=(6, 5), facecolor="black")
     ax.set_facecolor("black")
-    ax.imshow(wref_masked, origin="lower", cmap=_gray, alpha=0.6, zorder=0)
-    im = ax.imshow(masked, origin="lower", vmin=0, vmax=vmax,
+    ax.imshow(orient_map_for_display(wref_masked), origin="lower",
+              cmap=_gray, alpha=0.6, zorder=0)
+    im = ax.imshow(orient_map_for_display(masked),
+                   origin="lower", vmin=0, vmax=vmax,
                    cmap=_reds, alpha=0.9, zorder=1)
     ax.set_title(f"{title_prefix}: {name}", color="white")
     ax.tick_params(colors="white")

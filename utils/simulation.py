@@ -5,6 +5,8 @@ Simulation utilities: synthetic B0 maps, phantom generation.
 import numpy as np
 import matplotlib.pyplot as plt
 
+from .display import orient_map_for_display
+
 
 def make_b0_map(Dim_Voxel, sigma=5.0, amplitude=100.0):
     """
@@ -45,7 +47,7 @@ def make_b0_map(Dim_Voxel, sigma=5.0, amplitude=100.0):
     b0_map = amplitude * np.exp(-r2 * sigma)
 
     plt.figure(figsize=(6, 5))
-    plt.imshow(b0_map, cmap='jet', origin='lower')
+    plt.imshow(orient_map_for_display(b0_map), cmap='jet', origin='lower')
     plt.colorbar(label='Δf (Hz)')
     plt.title('Synthetic B0 Map (Gaussian in ellipse)')
     plt.xlabel('x (voxels)')
@@ -80,7 +82,7 @@ def make_lowres_b0_map(b0_high, low_shape):
     b0_low = b0_high.reshape(Nx_low, srf_x, Ny_low, srf_y).mean(axis=(1, 3))
 
     plt.figure(figsize=(6, 5))
-    plt.imshow(b0_low, cmap='jet', origin='lower')
+    plt.imshow(orient_map_for_display(b0_low), cmap='jet', origin='lower')
     plt.colorbar(label='Δf (Hz)')
     plt.title('low resolution B0 Map')
     plt.xlabel('x (voxels)')

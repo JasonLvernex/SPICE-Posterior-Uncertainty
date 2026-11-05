@@ -44,6 +44,7 @@ from fsl_mrs.core.nifti_mrs import gen_nifti_mrs as gen_nifti_mrs_fsl
 _root = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 sys.path.insert(0, _root)
 from utils.scan_params import load_scan_params
+from utils.display import orient_map_for_display
 from utils.xcorr import my_mrsi_freq_align
 from utils.pipeline_utils import patch_spicefit_tree
 from utils.utils import NUFFTOp, plot_voxel_spectrum_and_maps, read_training_data_from_csv, phase_corr, Calc_B0_matrix
@@ -272,7 +273,8 @@ def main():
     # ── Plot: spatial magnitude ───────────────────────────────────────────────────
     mag_map = np.mean(np.abs(image_adj), axis=-1)
     fig, ax = plt.subplots(figsize=(6, 5))
-    im = ax.imshow(mag_map, origin="lower", cmap="viridis")
+    im = ax.imshow(orient_map_for_display(mag_map),
+                   origin="lower", cmap="viridis")
     plt.colorbar(im, ax=ax)
     ax.set_title("Adjoint recon — spatial magnitude (mean over ppm)")
     plt.tight_layout()

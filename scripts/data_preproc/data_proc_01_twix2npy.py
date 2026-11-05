@@ -75,6 +75,7 @@ from mrinufft.io.siemens import read_siemens_rawdat
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
 from utils.scan_params import save_scan_params
 from utils.coil_sens import morse_pi
+from utils.display import orient_map_for_display
 import mrinufft
 
 from spec2nii.dcm2niiOrientation.orientationFuncs import dcm_to_nifti_orientation
@@ -240,7 +241,7 @@ def _save_wref_o_png(wref_o, out_dir):
         (axes[1], np.angle(img),  "phase(wref_o)",      "hsv"),
         (axes[2], img.real,       "Re(wref_o)",         "RdBu_r"),
     ]:
-        im = ax.imshow(data, cmap=cmap, origin="lower")
+        im = ax.imshow(orient_map_for_display(data), cmap=cmap, origin="lower")
         ax.set_title(title, fontsize=9)
         plt.colorbar(im, ax=ax, fraction=0.046)
     fig.tight_layout()

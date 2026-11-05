@@ -62,6 +62,7 @@ from fsl_mrs.core.nifti_mrs import gen_nifti_mrs as gen_nifti_mrs_fsl
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
 from utils.scan_params import load_scan_params
+from utils.display import orient_map_for_display
 from utils.pipeline_utils import make_brain_mask
 from utils.utils import (
     calc_Bmatrix,
@@ -216,7 +217,8 @@ def main():
 
     if args.save_plots:
         fig, ax = plt.subplots(figsize=(6, 5))
-        im = ax.imshow(np.abs(np.mean(B0_mat.reshape(Ny, Nx, N_SEQ), axis=-1)),
+        im = ax.imshow(orient_map_for_display(
+                           np.abs(np.mean(B0_mat.reshape(Ny, Nx, N_SEQ), axis=-1))),
                        origin="lower", cmap="viridis")
         plt.colorbar(im, ax=ax, label="B0 avg magnitude")
         ax.set_title("B0 modulation matrix (avg over time)")
@@ -239,7 +241,7 @@ def main():
 
     if args.save_plots:
         fig, ax = plt.subplots(figsize=(6, 5))
-        ax.imshow(wref_masked, origin="lower", cmap="gray")
+        ax.imshow(orient_map_for_display(wref_masked), origin="lower", cmap="gray")
         ax.set_title("wref_o (masked)")
         plt.tight_layout()
         fig.savefig(os.path.join(out_dir, "fig_04_wref_masked.png"), dpi=120)
@@ -251,8 +253,9 @@ def main():
 
         # wref anatomical prior
         fig, ax = plt.subplots(figsize=(6, 5))
-        ax.imshow(wref_norm, origin="lower", cmap="gray")
-        ax.imshow(brain_mask_inner, origin="lower", cmap="Reds", alpha=0.35)
+        ax.imshow(orient_map_for_display(wref_norm), origin="lower", cmap="gray")
+        ax.imshow(orient_map_for_display(brain_mask_inner), origin="lower",
+                  cmap="Reds", alpha=0.35)
         ax.set_title(f"wref prior + brain mask (thr={args.brain_threshold})")
         plt.tight_layout()
         fig.savefig(os.path.join(out_dir, "fig_04_prior_mask.png"), dpi=120)

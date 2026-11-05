@@ -30,7 +30,8 @@ Usage:
         --phase-ppmlim    3.5 3.9 \
         --plot-voxel      41 24 \
         --save-plots \
-        --phase-method none
+        --phase-method none \
+        [--phantom --brain-mask-cleanup]
 
 """
 
@@ -55,6 +56,7 @@ from fsl.data.image import Image
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
 from utils.scan_params import load_scan_params
 from utils.utils import phase_corr
+from utils.display import orient_map_for_display, orient_point_for_display
 from utils.lipid import compute_lss, select_lipid_mask_gmm_simple
 from utils.pipeline_utils import make_brain_mask, patch_spicefit_tree
 
@@ -130,10 +132,14 @@ def plot_mag_and_voxel(spec_4d, PPM_AXIS, voxel_row, voxel_col, title, fname):
     mag_map = np.mean(np.abs(spec_4d), axis=-1)[:, :, 0]
     spec_v  = spec_4d[voxel_row, voxel_col, 0, :].astype(np.complex64)
     fig, axs = plt.subplots(1, 2, figsize=(13, 5))
-    im = axs[0].imshow(np.abs(mag_map), origin="lower", cmap="viridis")
+    display_map = orient_map_for_display(np.abs(mag_map))
+    display_col, display_row = orient_point_for_display(
+        voxel_col, voxel_row, mag_map.shape
+    )
+    im = axs[0].imshow(display_map, origin="lower", cmap="viridis")
     axs[0].set_title("Avg spectral magnitude")
     plt.colorbar(im, ax=axs[0], fraction=0.046)
-    axs[0].add_patch(Rectangle((voxel_col - 0.5, voxel_row - 0.5), 1, 1,
+    axs[0].add_patch(Rectangle((display_col - 0.5, display_row - 0.5), 1, 1,
                                 linewidth=2, edgecolor="red", facecolor="none"))
     axs[1].plot(PPM_AXIS, np.real(spec_v), label="Real")
     axs[1].plot(PPM_AXIS, np.abs(spec_v),  label="|S|", alpha=0.7)
@@ -240,7 +246,8 @@ def main():
 
     if args.save_plots:
         fig, ax = plt.subplots(figsize=(5, 5))
-        ax.imshow(brain_nolip_mask, origin="lower", cmap="gray")
+        ax.imshow(orient_map_for_display(brain_nolip_mask),
+                  origin="lower", cmap="gray")
         ax.set_title(f"brain_nolip_mask  (thr={args.brain_threshold:.2e})")
         ax.axis("off")
         fig.tight_layout()
@@ -272,7 +279,8 @@ def main():
 
         if args.save_plots:
             fig, ax = plt.subplots(figsize=(5, 5))
-            im = ax.imshow(np.squeeze(lss_map), origin="lower", cmap="viridis")
+            im = ax.imshow(orient_map_for_display(np.squeeze(lss_map)),
+                           origin="lower", cmap="viridis")
             plt.colorbar(im, ax=ax, label="LSS")
             ax.set_title("LSS map")
             plt.tight_layout()

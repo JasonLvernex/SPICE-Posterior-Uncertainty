@@ -50,6 +50,7 @@ sys.path.insert(0, _root)
 from utils.scan_params import load_scan_params
 
 from utils.utils import plot_voxel_spectrum_and_maps
+from utils.display import orient_map_for_display
 
 
 # ── Helpers ───────────────────────────────────────────────────────────────────
@@ -99,9 +100,11 @@ def plot_metab_map(name, conc_maps, out_path, brain_mask=None,
         _gray = copy.copy(plt.cm.get_cmap("gray"))
         _gray.set_bad(color="black")
         wref_masked = np.where(brain_mask, wref_img_2d, np.nan) if brain_mask is not None else wref_img_2d
-        ax.imshow(wref_masked, origin="lower", cmap=_gray, alpha=0.6, zorder=0)
+        ax.imshow(orient_map_for_display(wref_masked), origin="lower",
+                  cmap=_gray, alpha=0.6, zorder=0)
 
-    im = ax.imshow(arr, origin="lower", vmin=vmin, vmax=vmax, cmap=_cmap,
+    im = ax.imshow(orient_map_for_display(arr), origin="lower",
+                   vmin=vmin, vmax=vmax, cmap=_cmap,
                    alpha=0.9 if wref_img_2d is not None else 1.0, zorder=1)
 
     ax.set_title(f"Concentration: {name}", color="white")
@@ -255,8 +258,13 @@ def main():
     fsl_out = os.path.join(fit_dir, "spice_fit")
     if os.path.exists(fsl_out):
         shutil.rmtree(fsl_out)
+    # Keep the CLI and Python API on the same FSL-MRS installation.  Relying
+    # on PATH can silently mix (for example) a conda Python package with the
+    # standalone FSL executable, producing non-comparable fitting results.
+    env_fsl_mrsi = Path(sys.executable).with_name("fsl_mrsi")
+    fsl_mrsi_exe = str(env_fsl_mrsi) if env_fsl_mrsi.is_file() else "fsl_mrsi"
     cmd = [
-        "fsl_mrsi",
+        fsl_mrsi_exe,
         "--data",     aligned_nii,
         "--basis",    fit_basis_dir,
         "--mask",     mask_nii,

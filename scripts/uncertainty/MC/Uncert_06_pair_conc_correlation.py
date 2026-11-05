@@ -114,10 +114,13 @@ def plot_corr_map(name, corr_map, wref_norm, brain_mask, out_path):
     masked = np.where(brain_mask, corr_map, np.nan)
     fig, ax = plt.subplots(figsize=(6, 5), facecolor="black")
     ax.set_facecolor("black")
-    ax.imshow(wref_norm, origin="lower", cmap="gray", alpha=0.55, zorder=0)
-    im = ax.imshow(masked, origin="lower", cmap="RdBu_r", vmin=-1, vmax=1,
+    ax.imshow(np.rot90(wref_norm, k=1), origin="lower",
+              cmap="gray", alpha=0.55, zorder=0)
+    im = ax.imshow(np.rot90(masked, k=1), origin="lower",
+                   cmap="RdBu_r", vmin=-1, vmax=1,
                    alpha=0.92, zorder=1)
-    ax.contour(brain_mask, levels=[0.5], colors="white", linewidths=0.7, zorder=2)
+    ax.contour(np.rot90(brain_mask, k=1), levels=[0.5],
+               colors="white", linewidths=0.7, zorder=2)
     ax.set_title(f"Correlation: {name}", color="white")
     ax.tick_params(colors="white")
     for sp in ax.spines.values():

@@ -51,6 +51,7 @@ from typing import Optional, Tuple
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))))
 from utils.scan_params import load_scan_params
+from utils.display import orient_map_for_display, orient_point_for_display
 from utils.utils import NUFFTOp, calc_Bmatrix, Calc_B0_matrix_mx, build_nufft_ops
 
 D_TYPE   = np.complex64
@@ -188,7 +189,7 @@ def sample_lowrank(Q, vals_safe, n_samples, sigma2=1.0, seed=None, batch_size=10
 
 def plot_average_variation(spice_test, img_shape, voxel_x, voxel_y,
                             brain_mask=None, PPM_AXIS=None,
-                            threshold=None, dark_mode=True, cmap="Reds"):
+                            threshold=None, dark_mode=True, cmap="Reds_r"):
     nx, ny, nt = img_shape
     img = np.asarray(spice_test).reshape(nx, ny, nt)
     mag = np.mean(np.abs(img), axis=-1)
@@ -207,12 +208,17 @@ def plot_average_variation(spice_test, img_shape, voxel_x, voxel_y,
             ax.yaxis.label.set_color("white")
             for sp in ax.spines.values(): sp.set_color("white")
 
-    im0 = axs[0].imshow(mag_masked, cmap="viridis", origin="lower")
+    display_x, display_y = orient_point_for_display(
+        voxel_x, voxel_y, mag_masked.shape
+    )
+    display_mag = orient_map_for_display(mag_masked)
+    im0 = axs[0].imshow(display_mag, cmap="viridis", origin="lower")
     axs[0].set_title("Avg magnitude")
     plt.colorbar(im0, ax=axs[0], fraction=0.046)
-    axs[0].add_patch(Rectangle((voxel_x-.5, voxel_y-.5), 1, 1,
+    axs[0].add_patch(Rectangle((display_x-.5, display_y-.5), 1, 1,
                                 linewidth=2, edgecolor="green", facecolor="none"))
-    im1 = axs[1].imshow(np.abs(mag_masked), cmap=cmap, origin="lower",
+    im1 = axs[1].imshow(orient_map_for_display(np.abs(mag_masked)),
+                         cmap=cmap, origin="lower",
                          vmin=0, vmax=threshold)
     axs[1].set_title("Uncertainty (brain mask)")
     plt.colorbar(im1, ax=axs[1], fraction=0.046)

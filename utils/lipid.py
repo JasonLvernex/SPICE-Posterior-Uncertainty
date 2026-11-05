@@ -9,6 +9,8 @@ import numpy as np
 import matplotlib.pyplot as plt
 from matplotlib.patches import Rectangle
 
+from .display import orient_map_for_display, orient_point_for_display
+
 
 def compute_lss(data, ppm_axis, low_ppm=0.7, high_ppm=1.8):
     lipid_idx = np.where((ppm_axis >= low_ppm) & (ppm_axis <= high_ppm))[0]
@@ -64,11 +66,15 @@ def select_lipid_mask_gmm_simple(lss_map, out_dir, nsigma=0.2,
         ax1.set_xlabel("log(LSS)")
         ax1.legend()
         ax1.set_title(f"{title_prefix} GMM  method={method}  n={nsel}")
-        im = ax2.imshow(lss2d, origin="lower", cmap="viridis")
+        im = ax2.imshow(orient_map_for_display(lss2d),
+                        origin="lower", cmap="viridis")
         ax2.set_title(f"{title_prefix} map + selected mask")
         plt.colorbar(im, ax=ax2, fraction=0.046)
         for yy, xx in zip(*np.where(mask)):
-            ax2.add_patch(Rectangle((xx - 0.5, yy - 0.5), 1, 1,
+            display_x, display_y = orient_point_for_display(
+                xx, yy, lss2d.shape
+            )
+            ax2.add_patch(Rectangle((display_x - 0.5, display_y - 0.5), 1, 1,
                                     edgecolor="red", facecolor="none", linewidth=1.2))
         plt.tight_layout()
         fig.savefig(os.path.join(out_dir, out_fname), dpi=120)

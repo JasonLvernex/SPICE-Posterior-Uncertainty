@@ -74,6 +74,7 @@ from fsl.data.image import Image
 _root = os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
 sys.path.insert(0, _root)
 from utils.scan_params import load_scan_params
+from utils.display import orient_map_for_display
 
 from utils.xcorr import my_mrsi_freq_align
 
@@ -226,10 +227,13 @@ def _plot_std_map(name, conc_std, metab_names, wref_norm, brain_mask, out_path, 
 
     fig, ax = plt.subplots(figsize=(6, 5), facecolor="black")
     ax.set_facecolor("black")
-    ax.imshow(wref_norm, origin="lower", cmap="gray", alpha=0.6, zorder=0)
-    im = ax.imshow(masked, origin="lower", vmin=0, vmax=vmax, cmap="Reds",
+    ax.imshow(orient_map_for_display(wref_norm), origin="lower",
+              cmap="gray", alpha=0.6, zorder=0)
+    im = ax.imshow(orient_map_for_display(masked), origin="lower",
+                   vmin=0, vmax=vmax, cmap="Reds_r",
                    alpha=0.9, zorder=1)
-    ax.contour(brain_mask, levels=[0.5], colors="white", linewidths=0.7, zorder=2)
+    ax.contour(orient_map_for_display(brain_mask), levels=[0.5],
+               colors="white", linewidths=0.7, zorder=2)
     ax.set_title(f"Conc. std: {name}", color="white")
     ax.tick_params(colors="white")
     for spine in ax.spines.values():
@@ -255,10 +259,13 @@ def _plot_mean_map(name, conc_mean, metab_names, wref_norm, brain_mask, out_path
 
     fig, ax = plt.subplots(figsize=(6, 5), facecolor="black")
     ax.set_facecolor("black")
-    ax.imshow(wref_norm, origin="lower", cmap="gray", alpha=0.6, zorder=0)
-    im = ax.imshow(masked, origin="lower", vmin=0, vmax=vmax, cmap="inferno",
+    ax.imshow(orient_map_for_display(wref_norm), origin="lower",
+              cmap="gray", alpha=0.6, zorder=0)
+    im = ax.imshow(orient_map_for_display(masked), origin="lower",
+                   vmin=0, vmax=vmax, cmap="inferno",
                    alpha=0.9, zorder=1)
-    ax.contour(brain_mask, levels=[0.5], colors="white", linewidths=0.7, zorder=2)
+    ax.contour(orient_map_for_display(brain_mask), levels=[0.5],
+               colors="white", linewidths=0.7, zorder=2)
     ax.set_title(f"Conc. mean: {name}", color="white")
     ax.tick_params(colors="white")
     for spine in ax.spines.values():

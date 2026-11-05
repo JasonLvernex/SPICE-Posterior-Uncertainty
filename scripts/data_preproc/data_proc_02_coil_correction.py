@@ -52,6 +52,7 @@ filterwarnings("ignore")
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
 from utils.scan_params import load_scan_params
 from utils.coil_sens import morse_pi
+from utils.display import orient_map_for_display, orient_point_for_display
 from utils.pipeline_utils import try_symlink_shared_output, patch_spicefit_tree
 
 
@@ -210,8 +211,9 @@ def main():
 
     if args.save_plots:
         fig, ax = plt.subplots(1, 1, figsize=(5, 5))
-        im = ax.imshow(img, origin="lower", cmap="gray")
-        ax.imshow(brain_mask, origin="lower", cmap="Reds", alpha=0.35)
+        im = ax.imshow(orient_map_for_display(img), origin="lower", cmap="gray")
+        ax.imshow(orient_map_for_display(brain_mask), origin="lower",
+                  cmap="Reds", alpha=0.35)
         ax.set_title(f"wref_o |magnitude| + brain mask (thr={args.brain_threshold:.2e})")
         plt.colorbar(im, ax=ax, fraction=0.046)
         plt.tight_layout()
@@ -249,13 +251,15 @@ def main():
 
         if args.save_plots:
             fig, axes = plt.subplots(1, 3, figsize=(15, 4))
-            im0 = axes[0].imshow(rss_before * brain_mask, origin="lower", cmap="gray")
+            im0 = axes[0].imshow(orient_map_for_display(rss_before * brain_mask),
+                                 origin="lower", cmap="gray")
             axes[0].set_title("RSS before normalisation")
             plt.colorbar(im0, ax=axes[0], fraction=0.046)
-            axes[1].imshow(img * brain_mask, origin="lower", cmap="gray")
+            axes[1].imshow(orient_map_for_display(img * brain_mask),
+                           origin="lower", cmap="gray")
             axes[1].set_title(f"wref magnitude (thr={args.brain_threshold:.2e})")
             rss_after = np.sqrt(np.sum(np.abs(coil_smap) ** 2, axis=0))
-            axes[2].imshow(rss_after * brain_mask, origin="lower",
+            axes[2].imshow(orient_map_for_display(rss_after * brain_mask), origin="lower",
                            cmap="gray", vmin=0, vmax=1.05)
             axes[2].set_title("RSS after normalisation (≈1)")
             plt.tight_layout()
@@ -265,7 +269,8 @@ def main():
             fig, axes = plt.subplots(4, 8, figsize=(16, 8))
             for c, ax in enumerate(axes.flat):
                 if c < N_COILS:
-                    ax.imshow(np.abs(coil_smap[c]), origin="lower", cmap="magma")
+                    ax.imshow(orient_map_for_display(np.abs(coil_smap[c])),
+                              origin="lower", cmap="magma")
                     ax.set_title(f"C{c}", fontsize=7)
                 ax.axis("off")
             plt.suptitle("MORSE-PI coil sensitivities |magnitude|")
@@ -303,16 +308,22 @@ def main():
 
         if args.save_plots:
             fig, axes = plt.subplots(1, 3, figsize=(15, 4))
-            im = axes[0].imshow(W_avg, origin="lower", cmap="RdBu", vmin=-1, vmax=1)
+            im = axes[0].imshow(orient_map_for_display(W_avg),
+                                origin="lower", cmap="RdBu", vmin=-1, vmax=1)
             axes[0].set_title("Weighted winding number")
             plt.colorbar(im, ax=axes[0])
             for loc in pole_locs:
-                axes[0].plot(loc[1], loc[0], "ko", ms=8)
+                display_x, display_y = orient_point_for_display(
+                    loc[1], loc[0], W_avg.shape
+                )
+                axes[0].plot(display_x, display_y, "ko", ms=8)
             rss_b = np.sqrt(np.sum(np.abs(ecalib) ** 2, axis=0))
             rss_a = np.sqrt(np.sum(np.abs(coil_smap) ** 2, axis=0))
-            axes[1].imshow(rss_b * brain_mask, origin="lower", cmap="gray")
+            axes[1].imshow(orient_map_for_display(rss_b * brain_mask),
+                           origin="lower", cmap="gray")
             axes[1].set_title("RSS before correction")
-            axes[2].imshow(rss_a * brain_mask, origin="lower", cmap="gray")
+            axes[2].imshow(orient_map_for_display(rss_a * brain_mask),
+                           origin="lower", cmap="gray")
             axes[2].set_title("RSS after correction")
             plt.tight_layout()
             fig.savefig(os.path.join(out_dir, "fig_01a_rni_poles.png"), dpi=120)
@@ -321,7 +332,8 @@ def main():
             fig, axes = plt.subplots(4, 8, figsize=(16, 8))
             for c, ax in enumerate(axes.flat):
                 if c < n_coils:
-                    ax.imshow(np.abs(coil_smap[c]), origin="lower", cmap="magma")
+                    ax.imshow(orient_map_for_display(np.abs(coil_smap[c])),
+                              origin="lower", cmap="magma")
                     ax.set_title(f"C{c}", fontsize=7)
                 ax.axis("off")
             plt.suptitle("RNI coil sensitivities |magnitude| (pole-corrected)")

@@ -5,6 +5,8 @@ from scipy.ndimage import gaussian_filter
 from mrinufft.extras.cartesian import fft, ifft
 from mrinufft.extras.smaps import _extract_kspace_center
 
+from .display import orient_map_for_display
+
 
 def cartesian_kspace_centre(
     traj: NDArray,
@@ -56,9 +58,15 @@ def cartesian_kspace_centre(
         axes[0, 0].set_title(f"Full traj normalised (coil {coil})")
         axes[0, 1].scatter(samples_norm[:, 0], samples_norm[:, 1], s=1, c=np.abs(k_space[coil, ...]))
         axes[0, 1].set_title(f"Central region normalised (calib_width={calib_width})")
-        axes[1, 0].imshow(np.abs(central_kspace_img[coil, :, :]), origin="lower", cmap="gray")
+        axes[1, 0].imshow(
+            orient_map_for_display(np.abs(central_kspace_img[coil, :, :])),
+            origin="lower", cmap="gray"
+        )
         axes[1, 0].set_title("pinv_solver recon (coil img)")
-        axes[1, 1].imshow(np.abs(fft(central_kspace_img)[coil, :, :]), origin="lower", cmap="gray")
+        axes[1, 1].imshow(
+            orient_map_for_display(np.abs(fft(central_kspace_img)[coil, :, :])),
+            origin="lower", cmap="gray"
+        )
         axes[1, 1].set_title("FFT of recon (calib k-space)")
         plt.tight_layout()
         if plot_path:

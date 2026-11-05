@@ -11,6 +11,7 @@ from fsl_mrs.utils.plotting import FID2Spec
 from fsl_mrs.utils.misc import FIDToSpec
 
 from .graph import classify_edge_direction
+from .display import orient_map_for_display, orient_point_for_display
 
 
 def plot_anatomical_mask_points_size_directional(
@@ -69,12 +70,16 @@ def plot_anatomical_mask_points_size_directional(
         mid_x = (y1 + y2) / 2
         mid_y = (x1 + x2) / 2
 
-        points_by_dir[direction]['x'].append(mid_x)
-        points_by_dir[direction]['y'].append(mid_y)
+        display_x, display_y = orient_point_for_display(
+            mid_x, mid_y, anatomical_prior.shape
+        )
+        points_by_dir[direction]['x'].append(display_x)
+        points_by_dir[direction]['y'].append(display_y)
         points_by_dir[direction]['sizes'].append(val_norm * size_scale)
 
     plt.figure(figsize=(8, 6))
-    plt.imshow(anatomical_prior, cmap='viridis', origin='lower')
+    plt.imshow(orient_map_for_display(anatomical_prior),
+               cmap='viridis', origin='lower')
 
     for direction, pts in points_by_dir.items():
         if pts['x']:
@@ -327,7 +332,8 @@ def plot_popt_arbmet(popt, META_LIST, Dim_Voxel, col_idx=None, minpool_param=0,
         for m, meta in enumerate(META_LIST):
             conc_2d = conc_all[:, m].reshape(N_row, N_col, order='C')
             plt.subplot(1, n_subplots, m + 1)
-            plt.imshow(conc_2d, cmap='plasma', origin='lower', vmin=vmin, vmax=vmax)
+            plt.imshow(orient_map_for_display(conc_2d), cmap='plasma',
+                       origin='lower', vmin=vmin, vmax=vmax)
             plt.title(f'Peak {m+1} Concentration ({meta})')
             plt.xlabel('x')
             plt.ylabel('y')
@@ -384,13 +390,15 @@ def plot_popt(popt, N_row, N_col, col_idx=None, minpool_param=0, minpooling_Hand
         vmin, vmax = 0, 1.0
         plt.figure(figsize=(12, 5))
         plt.subplot(1, 2, 1)
-        plt.imshow(fit1_2d, cmap='plasma', origin='lower', vmin=vmin, vmax=vmax)
+        plt.imshow(orient_map_for_display(fit1_2d), cmap='plasma',
+                   origin='lower', vmin=vmin, vmax=vmax)
         plt.title('Peak 1 Concentration (Glu)')
         plt.xlabel('x')
         plt.ylabel('y')
         plt.colorbar(label='Amplitude')
         plt.subplot(1, 2, 2)
-        plt.imshow(fit2_2d, cmap='plasma', origin='lower', vmin=vmin, vmax=vmax)
+        plt.imshow(orient_map_for_display(fit2_2d), cmap='plasma',
+                   origin='lower', vmin=vmin, vmax=vmax)
         plt.title('Peak 2 Concentration (Cho)')
         plt.xlabel('x')
         plt.ylabel('y')
@@ -471,12 +479,14 @@ def plot_voxel_sum_map(
 
     fig, ax = plt.subplots(figsize=(6, 5), facecolor='black')
     ax.set_facecolor('black')
-    ax.imshow(anatomical_prior, cmap='gray', origin='lower', alpha=1.0)
+    ax.imshow(orient_map_for_display(anatomical_prior), cmap='gray',
+              origin='lower', alpha=1.0)
 
     cmap_obj = plt.cm.Greens.copy()
     cmap_obj.set_under('black')
 
-    im = ax.imshow(voxel_sum_map, cmap=cmap_obj, origin='lower', vmax=30000, alpha=0.8)
+    im = ax.imshow(orient_map_for_display(voxel_sum_map), cmap=cmap_obj,
+                   origin='lower', vmax=30000, alpha=0.8)
 
     ax.set_title('Voxel-level sum prior map', color='white')
     ax.tick_params(colors='white')
@@ -568,19 +578,25 @@ def plot_voxel_spectrum_and_maps(
             for spine in ax.spines.values():
                 spine.set_color('white')
 
-    im = axs[0].imshow(np.abs(mag_map_2d), cmap=cmap, origin='lower')
+    display_mag = orient_map_for_display(np.abs(mag_map_2d))
+    display_masked = orient_map_for_display(np.abs(mag_map_masked))
+    display_x, display_y = orient_point_for_display(
+        voxel_x, voxel_y, mag_map_2d.shape
+    )
+
+    im = axs[0].imshow(display_mag, cmap=cmap, origin='lower')
     axs[0].set_title(f"Average spectral magnitude (slice {voxel_z})")
     axs[0].set_xlabel("x (cols)")
     axs[0].set_ylabel("y (rows)")
     plt.colorbar(im, ax=axs[0], fraction=0.046, pad=0.04)
 
     rect = Rectangle(
-        (voxel_x - 0.5, voxel_y - 0.5), 1, 1,
+        (display_x - 0.5, display_y - 0.5), 1, 1,
         linewidth=2, edgecolor='red', facecolor='none'
     )
     axs[0].add_patch(rect)
 
-    im1 = axs[1].imshow(np.abs(mag_map_masked), cmap=cmap, origin='lower')
+    im1 = axs[1].imshow(display_masked, cmap=cmap, origin='lower')
     axs[1].set_title("Average spectral magnitude (brain mask)")
     axs[1].set_xlabel("x (cols)")
     axs[1].set_ylabel("y (rows)")
@@ -709,19 +725,26 @@ def plot_recon_b0_and_voxel_spectrum(
         vmin = -vmax
     else:
         vmax, vmin = 1.0, -1.0
-    im0 = axs[0].imshow(delta_map, origin='lower', aspect='auto', cmap=cmap_delta, vmin=vmin, vmax=vmax)
+    im0 = axs[0].imshow(orient_map_for_display(delta_map), origin='lower',
+                        aspect='auto', cmap=cmap_delta, vmin=vmin, vmax=vmax)
     axs[0].set_title("Delta map (Hz)")
     axs[0].set_xlabel("x (cols)")
     axs[0].set_ylabel("y (rows)")
-    rect0 = Rectangle((voxel_x - 0.5, voxel_y - 0.5), 1, 1, linewidth=2, edgecolor='black', facecolor='none')
+    display_x, display_y = orient_point_for_display(
+        voxel_x, voxel_y, delta_map.shape
+    )
+    rect0 = Rectangle((display_x - 0.5, display_y - 0.5), 1, 1,
+                      linewidth=2, edgecolor='black', facecolor='none')
     axs[0].add_patch(rect0)
     plt.colorbar(im0, ax=axs[0], fraction=0.046, pad=0.04)
 
-    im1 = axs[1].imshow(B0_map, cmap=cmap_b0, origin='lower', aspect='auto')
+    im1 = axs[1].imshow(orient_map_for_display(B0_map), cmap=cmap_b0,
+                        origin='lower', aspect='auto')
     axs[1].set_title("B0 map")
     axs[1].set_xlabel("x (cols)")
     axs[1].set_ylabel("y (rows)")
-    rect1 = Rectangle((voxel_x - 0.5, voxel_y - 0.5), 1, 1, linewidth=2, edgecolor='red', facecolor='none')
+    rect1 = Rectangle((display_x - 0.5, display_y - 0.5), 1, 1,
+                      linewidth=2, edgecolor='red', facecolor='none')
     axs[1].add_patch(rect1)
     annot_text = f"voxel ({voxel_y},{voxel_x})\nb0 = {b0_value:.4f}\ndelta = {voxel_delta:.2f} Hz"
     axs[1].text(0.02, 0.98, annot_text, transform=axs[1].transAxes,
@@ -774,7 +797,7 @@ def plot_average_variation(
     prior_alpha: float = 0.35,
     threshold: Optional[float] = None,
     PPM_AXIS: Optional[np.ndarray] = None,
-    cmap: str = "Reds",
+    cmap: str = "Reds_r",
     figsize: Tuple[float, float] = (18, 5),
     show: bool = True
 ):
@@ -821,22 +844,29 @@ def plot_average_variation(
 
     fig, axs = plt.subplots(1, 3, figsize=figsize)
 
-    im = axs[0].imshow(np.abs(mag_map_2d), cmap='viridis', origin='lower')
+    display_mag = orient_map_for_display(np.abs(mag_map_2d))
+    display_masked = orient_map_for_display(np.abs(mag_map_masked))
+    display_x, display_y = orient_point_for_display(
+        voxel_x, voxel_y, mag_map_2d.shape
+    )
+
+    im = axs[0].imshow(display_mag, cmap='viridis', origin='lower')
     axs[0].set_title(f"Average spectral magnitude (slice {voxel_z})")
     axs[0].set_xlabel("x (cols)")
     axs[0].set_ylabel("y (rows)")
     plt.colorbar(im, ax=axs[0], fraction=0.046, pad=0.04)
 
     rect = Rectangle(
-        (voxel_x - 0.5, voxel_y - 0.5), 1, 1,
+        (display_x - 0.5, display_y - 0.5), 1, 1,
         linewidth=2, edgecolor='green', facecolor='none'
     )
     axs[0].add_patch(rect)
 
     if threshold is None:
-        im1 = axs[1].imshow(np.abs(mag_map_masked), cmap=cmap, origin='lower')
+        im1 = axs[1].imshow(display_masked, cmap=cmap, origin='lower')
     else:
-        im1 = axs[1].imshow(np.abs(mag_map_masked), cmap=cmap, origin='lower', vmin=0, vmax=threshold)
+        im1 = axs[1].imshow(display_masked, cmap=cmap, origin='lower',
+                            vmin=0, vmax=threshold)
 
     axs[1].set_title("Average spectral magnitude (brain mask)")
     axs[1].set_xlabel("x (cols)")
@@ -849,7 +879,8 @@ def plot_average_variation(
             prior_2d = prior_2d[:, :, voxel_z]
         if prior_2d.shape != (nx, ny):
             raise ValueError(f"brain_prior_map shape must be {(nx, ny)} or {(nx, ny, nz)}")
-        axs[1].imshow(prior_2d, cmap='gray', origin='lower', alpha=prior_alpha)
+        axs[1].imshow(orient_map_for_display(prior_2d), cmap='gray',
+                      origin='lower', alpha=prior_alpha)
 
     if PPM_AXIS is None:
         x_axis = np.arange(npts)
