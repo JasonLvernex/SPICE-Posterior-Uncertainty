@@ -5,7 +5,11 @@
 
 ## Citation
 
-If you use this code, please cite the associated paper (in preparation) and acknowledge this repository.
+If you use this code, please cite the associated ![bioRxiv preprint](https://www.biorxiv.org/content/10.64898/2026.11.05.764591v1)  and acknowledge this repository. 
+
+A Framework for SPICE MRSI Reconstruction Posterior Uncertainty Quantification
+Tian Lyu, Saad Jbabdi, Simon M Finney, William T Clarke
+bioRxiv 2026.11.05.764591; doi: https://doi.org/10.64898/2026.11.05.764591
 
 See also: Lyu T, Jbabdi S, Clarke W, Finney S. Pipeline for Quantifying Uncertainty for SPICE Reconstructed MRSI. In: Proceedings of the 2026 ISMRM-ISMRT Annual Meeting and Exhibition, Cape Town, South Africa. Program #402-03-003.
 
